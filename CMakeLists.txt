@@ -310,6 +310,9 @@ include_directories(${LIBDIR_BIN}/platform)
 # For ligigl
 include_directories(${LIBDIR}/libigl)
 
+# tell *all* targets to look in src/boost for any <boost/...> headers
+include_directories(${CMAKE_SOURCE_DIR}/src/boost)
+
 if(WIN32)
     add_definitions(-D_USE_MATH_DEFINES -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
     if(MSVC)
@@ -356,7 +359,8 @@ endif()
 # set(Boost_COMPILER "-mgw81")
 # boost::process was introduced first in version 1.64.0,
 # boost::beast::detail::base64 was introduced first in version 1.66.0
-set(MINIMUM_BOOST_VERSION "1.66.0")
+# https://github.com/boostorg/mpl/issues/69 in version 1.86.0
+set(MINIMUM_BOOST_VERSION "1.86.0")
 set(_boost_components "system;filesystem;thread;log;locale;regex;chrono;atomic;date_time;iostreams")
 find_package(Boost ${MINIMUM_BOOST_VERSION} REQUIRED COMPONENTS ${_boost_components})
 

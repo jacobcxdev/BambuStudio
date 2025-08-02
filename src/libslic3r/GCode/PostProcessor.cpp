@@ -23,6 +23,16 @@
 #define NOMINMAX
 #include <Windows.h>
 #include <shellapi.h>
+#else
+// POSIX
+#include <sstream>
+#include <boost/process/v1/child.hpp>
+#include <boost/process/v1/io.hpp>
+#include <boost/process/v1/pipe.hpp>
+#include <unistd.h>     //readlink
+#endif
+
+#ifdef WIN32
 
 // https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/
 // This routine appends the given argument to a command line such that CommandLineToArgvW will return the argument string unchanged.
@@ -135,6 +145,24 @@ static int run_script(const std::string &script, const std::string &gcode, std::
         command_line = L"cmd.exe /C ";
     }
 
+    std::wstring absolute_command_path;
+    //check if it's an exe
+    if (!need_absolute_path && boost::iends_with(command, ".exe")) {
+        // exe: it may come from the path, don't check.
+        absolute_command_path = command;
+    } else {
+        //try to find the file, in different directories
+        absolute_command_path = Slic3r::find_full_path(boost::filesystem::path(command)).generic_wstring();
+        if (absolute_command_path.empty()) {
+            if (need_absolute_path) {
+                BOOST_LOG_TRIVIAL(warning) << "The configured post-processing script may not exist: " << command;
+            }
+            absolute_command_path = command;
+        }
+    }
+    quote_argv_winapi(absolute_command_path, command_line);
+    command_line += L" ";
+
     for (int i = 0; i < nArgs; ++ i) {
         quote_argv_winapi(szArglist[i], command_line);
         command_line += L" ";
@@ -147,38 +175,14 @@ static int run_script(const std::string &script, const std::string &gcode, std::
 #else
     // POSIX
 
-#include <cstdlib>   // getenv()
-#include <sstream>
-#include <boost/process.hpp>
-
-namespace process = boost::process;
-
-static int run_script(const std::string &script, const std::string &gcode, std::string &std_err)
+int run_script(const std::string& shell, const std::string& command_line, std::string& std_err)
 {
-    // Try to obtain user's default shell
-    const char *shell = ::getenv("SHELL");
-    if (shell == nullptr) { shell = "sh"; }
+    boost::process::v1::ipstream istd_err;
+    boost::process::v1::child child(shell, "-c", command_line, boost::process::v1::std_err > istd_err);
 
-    // Quote and escape the gcode path argument
-    std::string command { script };
-    command.append(" '");
-    for (char c : gcode) {
-        if (c == '\'') { command.append("'\\''"); }
-        else { command.push_back(c); }
-    }
-    command.push_back('\'');
-
-    BOOST_LOG_TRIVIAL(debug) << boost::format("Executing script, shell: %1%, command: %2%") % shell % command;
-
-    process::ipstream istd_err;
-    process::child child(shell, "-c", command, process::std_err > istd_err);
-
-    std_err.clear();
     std::string line;
-
     while (child.running() && std::getline(istd_err, line)) {
-        std_err.append(line);
-        std_err.push_back('\n');
+        std_err += line + '\n';
     }
 
     child.wait();
@@ -239,7 +243,7 @@ bool run_post_process_scripts(std::string &src_path, bool make_copy, const std::
 {
     const auto *post_process = config.opt<ConfigOptionStrings>("post_process");
     if (// likely running in SLA mode
-        post_process == nullptr || 
+        post_process == nullptr ||
         // no post-processing script
         post_process->values.empty())
         return false;

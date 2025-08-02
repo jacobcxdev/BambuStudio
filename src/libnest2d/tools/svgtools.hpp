@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 
+#include <boost/nowide/fstream.hpp>
 #include <boost/filesystem.hpp>
 #include <libnest2d/nester.hpp>
 
@@ -146,7 +147,7 @@ public:
         size_t last = svg_layers_.size() > 1 ? svg_layers_.size() : 0;
 
         for (auto &lyr : svg_layers_) {
-            boost::filesystem::ofstream out(filepath, std::fstream::out);
+            boost::nowide::ofstream out(filepath.string(), std::ios_base::out);
             if (out.is_open()) out << lyr;
             if (lyrc == last && !finished_) out << "\n</svg>\n";
             out.flush();

@@ -75,10 +75,17 @@ private:
     static bool get_stream_url(std::string *url = nullptr);
 
 private:
+#ifdef __GNUC__
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wenum-constexpr-conversion"
+#endif
     static constexpr wxMediaState MEDIASTATE_IDLE = (wxMediaState) 3;
     static constexpr wxMediaState MEDIASTATE_INITIALIZING = (wxMediaState) 4;
     static constexpr wxMediaState MEDIASTATE_LOADING = (wxMediaState) 5;
     static constexpr wxMediaState MEDIASTATE_BUFFERING = (wxMediaState) 6;
+#ifdef __GNUC__
+#  pragma GCC diagnostic pop
+#endif
 
     wxMediaCtrl3 * m_media_ctrl;
     wxMediaState m_last_state = MEDIASTATE_IDLE;

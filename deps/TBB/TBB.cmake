@@ -1,7 +1,7 @@
 bambustudio_add_cmake_project(
     TBB
-    URL "https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip"
-    URL_HASH SHA256=83ea786c964a384dd72534f9854b419716f412f9d43c0be88d41874763e7bb47
+    URL "https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v2022.2.0.zip"
+    URL_HASH SHA256=5470ccd4d127c6d680e46fee016531e452dc653d8eb1a40bd78ff087600fa582
     #PATCH_COMMAND ${PATCH_CMD} ${CMAKE_CURRENT_LIST_DIR}/0001-TBB-GCC13.patch
     CMAKE_ARGS          
         -DTBB_BUILD_SHARED=OFF
