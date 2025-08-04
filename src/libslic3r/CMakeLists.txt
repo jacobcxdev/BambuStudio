@@ -38,8 +38,8 @@ set(lisbslic3r_sources
     Brim.hpp
     BuildVolume.cpp
     BuildVolume.hpp
-        CGALCompat.hpp
-	Calib.cpp
+    CGALCompat.hpp
+    Calib.cpp
     Calib.hpp
     Circle.cpp
     Circle.hpp
